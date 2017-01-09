@@ -16,8 +16,28 @@ namespace ContactManager.Migrations
             AutomaticMigrationsEnabled = false;
         }
 
+        bool AddUserAndRole(ContactManager.Models.ApplicationDbContext context)
+        {
+            IdentityResult ir;
+            var rm = new RoleManager<IdentityRole>
+                (new RoleStore<IdentityRole>(context));
+            ir = rm.Create(new IdentityRole("canEdit"));
+            var um = new UserManager<ApplicationUser>(
+                new UserStore<ApplicationUser>(context));
+            var user = new ApplicationUser()
+            {
+                UserName = "user1@contoso.com",
+            };
+            ir = um.Create(user, "P_assw0rd1");
+            if (ir.Succeeded == false)
+                return ir.Succeeded;
+            ir = um.AddToRole(user.Id, "canEdit");
+            return ir.Succeeded;
+        }
+
         protected override void Seed(ContactManager.Models.ApplicationDbContext context)
         {
+            this.AddUserAndRole(context);
             context.Contacts.AddOrUpdate(p => p.Name,
                new Contact
                {
